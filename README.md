@@ -1,0 +1,2 @@
+# peterson-tic-tac-toe-sync
+ This GitHub repository hosts an implementation of Peterson's Algorithm for mutual exclusion in a concurrent Tic Tac Toe game simulation. The project demonstrates the practical application of synchronization techniques in operating systems through a terminal-based interface. The implementation ensures thread safety and prevents race conditions, allowing users to interactively observe how mutual exclusion guarantees data integrity in multi-threaded environments.
