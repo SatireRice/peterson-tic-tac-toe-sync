@@ -1,1 +1,111 @@
+#include <iostream>
+#include <thread>
+#include <atomic>
+
+using namespace std;
+
+// Peterson's algorithm variables
+atomic<bool> flag[2];
+atomic<int> turn;
+
+// Game board and related variables
+char board[3][3];
+atomic<int> currentPlayer;
+atomic<bool> gameOver;
+
+// Function to initialize the game board
+void initializeBoard() {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            board[i][j] = ' ';
+        }
+    }
+}
+
+// Function to print the game board
+void printBoard() {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            cout << board[i][j];
+            if (j < 2) cout << " | ";
+        }
+        cout << endl;
+        if (i < 2) cout << "---------" << endl;
+    }
+}
+
+// Function to check if there is a winner
+bool checkWin(char player) {
+    for (int i = 0; i < 3; ++i) {
+        if (board[i][0] == player && board[i][1] == player && board[i][2] == player) return true;
+        if (board[0][i] == player && board[1][i] == player && board[2][i] == player) return true;
+    }
+    if (board[0][0] == player && board[1][1] == player && board[2][2] == player) return true;
+    if (board[0][2] == player && board[1][1] == player && board[2][0] == player) return true;
+    return false;
+}
+
+// Function to check if the board is full
+bool isBoardFull() {
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (board[i][j] == ' ') return false;
+        }
+    }
+    return true;
+}
+
+// Player's turn
+void playerTurn(int player) {
+    char symbol = player == 0 ? 'X' : 'O';
+    int row, col;
+
+    while (!gameOver.load()) {
+        // Peterson's Algorithm Entry Section
+        flag[player] = true;
+        turn = 1 - player;
+        while (flag[1 - player] && turn == 1 - player);
+
+        // Critical Section
+        if (currentPlayer == player) {
+            do {
+                cout << "Player " << (player + 1) << " (" << symbol << ") turn. Enter row and column (0-2): ";
+                cin >> row >> col;
+            } while (row < 0 || row > 2 || col < 0 || col > 2 || board[row][col] != ' ');
+
+            board[row][col] = symbol;
+            printBoard();
+
+            if (checkWin(symbol)) {
+                cout << "Player " << (player + 1) << " (" << symbol << ") wins!" << endl;
+                gameOver = true;
+            } else if (isBoardFull()) {
+                cout << "It's a tie!" << endl;
+                gameOver = true;
+            } else {
+                currentPlayer = 1 - player;
+            }
+        }
+
+        // Peterson's Algorithm Exit Section
+        flag[player] = false;
+    }
+}
+
+int main() {
+    initializeBoard();
+    printBoard();
+    currentPlayer = 0;
+    gameOver = false;
+    flag[0] = false;
+    flag[1] = false;
+
+    thread player1(playerTurn, 0);
+    thread player2(playerTurn, 1);
+
+    player1.join();
+    player2.join();
+
+    return 0;
+}
 
